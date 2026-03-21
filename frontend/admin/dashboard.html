@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Movies - Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo"><span style="color: #e50914;">Get</span> Movies Admin</div>
+      <nav>
+        <span id="admin-name" style="margin-right: 20px;">Admin User</span>
+        <button class="btn btn-secondary btn-small" onclick="logout()">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="admin-container">
+      <!-- Sidebar Navigation -->
+      <div class="sidebar">
+        <div class="sidebar-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
+        <div class="sidebar-item" onclick="showSection('upload')">⬆️ Upload Content</div>
+        <div class="sidebar-item" onclick="showSection('users')">👥 Manage Users</div>
+        <div class="sidebar-item" onclick="showSection('payments')">💳 Payment Records</div>
+        <div class="sidebar-item" onclick="showSection('analytics')">📈 Analytics & Revenue</div>
+        <div class="sidebar-item" onclick="showSection('downloads')">📥 Download Stats</div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section">
+          <h2>📊 Admin Dashboard</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="total-users">0</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="active-users">0</div>
+              <div class="stat-label">Active Users (7d)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="total-revenue">Ksh 0</div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="total-downloads">0</div>
+              <div class="stat-label">Total Downloads</div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3>Revenue Growth (7 Days)</h3>
+            <canvas id="revenueChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3>User Registrations (7 Days)</h3>
+            <canvas id="registrationChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Upload Content Section -->
+        <section id="upload-section" class="content-section" style="display: none;">
+          <h2>⬆️ Upload New Content</h2>
+          <div style="margin-bottom: 30px;">
+            <h3>Upload Movie</h3>
+            <form onsubmit="uploadMovie(event)">
+              <div class="form-group">
+                <label>Movie Title</label>
+                <input type="text" id="movie-title" required>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="movie-desc" style="min-height: 100px;"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="movie-category">
+                  <option>Action</option>
+                  <option>Comedy</option>
+                  <option>Drama</option>
+                  <option>Horror</option>
+                  <option>Romantic</option>
+                  <option>Thriller</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Price (Ksh)</label>
+                <input type="number" id="movie-price" value="10" min="1">
+              </div>
+              <div class="form-group">
+                <label>Duration (seconds)</label>
+                <input type="number" id="movie-duration">
+              </div>
+              <div class="form-group">
+                <label>Movie Video URL (External Storage)</label>
+                <input type="url" id="movie-url" placeholder="https://storage.example.com/video.mp4">
+              </div>
+              <div class="form-group">
+                <label>Thumbnail URL</label>
+                <input type="url" id="movie-thumb" placeholder="https://storage.example.com/thumb.jpg">
+              </div>
+              <div class="form-group">
+                <label>Trailer URL</label>
+                <input type="url" id="movie-trailer" placeholder="https://storage.example.com/trailer.mp4">
+              </div>
+              <button type="submit" class="btn btn-primary">Upload Movie</button>
+            </form>
+          </div>
+
+          <div>
+            <h3>Upload Series</h3>
+            <form onsubmit="uploadSeries(event)">
+              <div class="form-group">
+                <label>Series Title</label>
+                <input type="text" id="series-title" required>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="series-desc" style="min-height: 100px;"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="series-category">
+                  <option>Action</option>
+                  <option>Comedy</option>
+                  <option>Drama</option>
+                  <option>Thriller</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Price per Episode (Ksh)</label>
+                <input type="number" id="series-price" value="10" min="1">
+              </div>
+              <div class="form-group">
+                <label>Thumbnail URL</label>
+                <input type="url" id="series-thumb">
+              </div>
+              <button type="submit" class="btn btn-primary">Create Series</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Users Management Section -->
+        <section id="users-section" class="content-section" style="display: none;">
+          <h2>👥 Manage Users</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Payments Section -->
+        <section id="payments-section" class="content-section" style="display: none;">
+          <h2>💳 Payment Records</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table">
+              <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading payments...</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics-section" class="content-section" style="display: none;">
+          <h2>📈 Analytics & Revenue</h2>
+          <div class="chart-container">
+            <h3>Monthly Revenue</h3>
+            <canvas id="monthlyRevenueChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3>User Growth</h3>
+            <canvas id="userGrowthChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Downloads Stats Section -->
+        <section id="downloads-section" class="content-section" style="display: none;">
+          <h2>📥 Download Statistics</h2>
+          <div class="chart-container">
+            <h3>Downloads Over Time</h3>
+            <canvas id="downloadsChart"></canvas>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Content</th>
+                <th>Downloads</th>
+                <th>Total Size (MB)</th>
+              </tr>
+            </thead>
+            <tbody id="downloads-table">
+              <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="logo" style="color: #e50914;"><span>Get</span> Movies</div>
+    <p>&copy; 2026 Get Movies Admin Panel. All Rights Reserved.</p>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    const admin = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('admin-name').textContent = admin.username || 'Admin';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboardStats();
+    });
+
+    function showSection(section) {
+      document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(section + '-section').style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    async function loadDashboardStats() {
+      try {
+        const data = await getAnalyticsOverview();
+        document.getElementById('total-users').textContent = data.total_users;
+        document.getElementById('active-users').textContent = data.active_users;
+        document.getElementById('total-revenue').textContent = 'Ksh ' + data.total_revenue;
+        document.getElementById('total-downloads').textContent = data.total_downloads;
+        
+        const revenueData = await getRevenue7Days();
+        const regData = await getUserRegistrations();
+        
+        drawRevenueChart(revenueData);
+        drawRegistrationChart(regData);
+      } catch(err) { console.error(err); }
+    }
+
+    function drawRevenueChart(data) {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            label: 'Revenue (Ksh)',
+            data: Object.values(data),
+            backgroundColor: '#e50914',
+            borderColor: '#e50914'
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    function drawRegistrationChart(data) {
+      const ctx = document.getElementById('registrationChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            label: 'New Registrations',
+            data: Object.values(data),
+            borderColor: '#e50914',
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    function uploadMovie(e) {
+      e.preventDefault();
+      alert('Movie upload initiated. In production, would upload to external storage.');
+    }
+
+    function uploadSeries(e) {
+      e.preventDefault();
+      alert('Series created. Now you can add episodes.');
+    }
+  </script>
+</body>
+</html>

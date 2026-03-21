@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Movies - User Dashboard</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo"><span style="color: #e50914;">Get</span> Movies</div>
+      <nav id="main-nav">
+        <a href="#" onclick="loadSection('home'); return false;">Home</a>
+        <a href="#" onclick="loadSection('movies'); return false;">Movies</a>
+        <a href="#" onclick="loadSection('series'); return false;">Series</a>
+        <a href="#" onclick="loadSection('purchased'); return false;">Purchased/Active</a>
+        <a href="#" onclick="loadSection('downloads'); return false;">Downloads</a>
+        <a href="#" onclick="loadSection('history'); return false;">Watch History</a>
+        <a href="#" onclick="loadSection('profile'); return false;">Edit Profile</a>
+        <a href="#" onclick="loadSection('settings'); return false;">Settings</a>
+        <a href="#" class="btn btn-small" onclick="toggleTheme(); return false;">🌙 Theme</a>
+      </nav>
+      <div class="user-profile">
+        <img id="profile-pic" class="profile-pic" src="/static/images/default-avatar.png" alt="Profile">
+        <span id="username">User</span>
+        <button class="btn btn-secondary btn-small" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-header">
+      <div></div>
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="🔍 Search for movies or series..." onkeyup="searchContent()">
+      </div>
+      <div></div>
+    </div>
+
+    <div id="content-area">
+      <!-- Latest Movies -->
+      <section class="section" id="home-section">
+        <div class="section-title">📺 Latest Movies</div>
+        <div class="carousel" id="latest-movies">Loading movies...</div>
+      </section>
+
+      <!-- Popular Series -->
+      <section class="section">
+        <div class="section-title">🎬 Popular Series</div>
+        <div class="carousel" id="popular-series">Loading series...</div>
+      </section>
+
+      <!-- Most Watched -->
+      <section class="section">
+        <div class="section-title">🔥 Most Watched</div>
+        <div class="carousel" id="most-watched">Loading...</div>
+      </section>
+
+      <!-- Customer Reviews -->
+      <section class="section">
+        <div class="review-section">
+          <h3>💬 Customer Reviews & Feedback</h3>
+          <div class="review-form">
+            <textarea id="review-text" placeholder="Share your thoughts about Get Movies..."></textarea>
+            <button class="btn btn-primary" onclick="submitReview()">Post Review</button>
+          </div>
+          <div class="review-list" id="reviews-list">
+            <p style="color: #999; text-align: center; padding: 20px;">No reviews yet. Be the first!</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="logo" style="color: #e50914; margin-bottom: 15px;"><span>Get</span> Movies</div>
+    <p>&copy; 2026 Get Movies. All Rights Reserved. | Premium Streaming Platform</p>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

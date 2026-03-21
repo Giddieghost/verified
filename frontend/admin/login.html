@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Movies - Admin Login</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .admin-login-container { max-width: 450px; margin: 80px auto; background: var(--secondary); padding: 40px; border-radius: 8px; border-left: 4px solid var(--primary); }
+    .admin-login-container h1 { color: var(--primary); margin-bottom: 10px; text-align: center; }
+    .admin-login-container .subtitle { text-align: center; color: #999; margin-bottom: 30px; font-size: 14px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+    .form-group input { width: 100%; padding: 12px; background-color: #333; border: 1px solid #555; border-radius: 4px; color: #fff; }
+    .form-group input:focus { outline: none; border-color: var(--primary); }
+    .btn-login { width: 100%; padding: 12px; margin-top: 20px; font-size: 16px; }
+    .user-link { text-align: center; margin-top: 20px; font-size: 14px; }
+    .user-link a { color: var(--primary); text-decoration: none; }
+    .warning { background-color: rgba(229, 9, 20, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; color: #ddd; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo"><span style="color: var(--primary);">Get</span> Movies</div>
+      <nav>
+        <a href="/frontend/user/login.html">User Login</a>
+        <a href="/frontend/user/register.html">Create Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="admin-login-container">
+      <h1>🔐 Admin Panel</h1>
+      <p class="subtitle">Administrators Only</p>
+      <div class="warning">⚠️ Unauthorized access attempts are logged and monitored.</div>
+      <form id="admin-login-form">
+        <div class="form-group">
+          <label>Admin Email</label>
+          <input type="email" id="admin-email" required>
+        </div>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <input type="password" id="admin-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-login">Admin Login</button>
+      </form>
+      <div class="user-link">
+        <p>Not an admin? <a href="/frontend/user/login.html">User Login</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="logo" style="color: var(--primary);"><span>Get</span> Movies</div>
+    <p>&copy; 2026 Get Movies. All Rights Reserved.</p>
+  </footer>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>
