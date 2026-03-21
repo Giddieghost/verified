@@ -6,7 +6,6 @@ from backend.utils.auth import token_required, admin_required
 
 movie_bp = Blueprint('movie', __name__)
 
-
 from backend.services.movie_service import MovieService
 
 @movie_bp.route('/', methods=['GET'])

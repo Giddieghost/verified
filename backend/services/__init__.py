@@ -1,4 +1,4 @@
-from .daraja_service import DarajaService
-from .movie_service import MovieService
+from backend.services.daraja_service import DarajaService
+from backend.services.movie_service import MovieService
 
 __all__ = ['DarajaService', 'MovieService']

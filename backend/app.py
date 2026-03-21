@@ -1,18 +1,18 @@
 from flask import Flask
-from .config import DevelopmentConfig, ProductionConfig, TestingConfig
-from .database.db import db
+from backend.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from backend.database.db import db
 from flask_migrate import Migrate
 
 migrate = Migrate()
-from .routes.auth_routes import auth_bp
-from .routes.user_routes import user_bp
-from .routes.admin_routes import admin_bp
-from .routes.movie_routes import movie_bp
-from .routes.series_routes import series_bp
-from .routes.payment_routes import payment_bp
-from .routes.review_routes import review_bp
-from .routes.download_routes import download_bp
-from .routes.analytics_routes import analytics_bp
+from backend.routes.auth_routes import auth_bp
+from backend.routes.user_routes import user_bp
+from backend.routes.admin_routes import admin_bp
+from backend.routes.movie_routes import movie_bp
+from backend.routes.series_routes import series_bp
+from backend.routes.payment_routes import payment_bp
+from backend.routes.review_routes import review_bp
+from backend.routes.download_routes import download_bp
+from backend.routes.analytics_routes import analytics_bp
 
 
 def create_app(config_name=None):
