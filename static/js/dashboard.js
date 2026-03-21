@@ -1,117 +1,204 @@
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 let currentTheme = localStorage.getItem('theme') || 'dark';
+let currentPaymentData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('username').textContent = user.username || 'User';
-  document.getElementById('profile-pic').src = user.profile_picture || '/static/images/default-avatar.png';
-  
-  if (currentTheme === 'light') document.body.style.filter = 'invert(1) hue-rotate(180deg)';
-  
-  loadMovies();
-  loadSeries();
-  loadReviews();
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/frontend/user/login.html';
+        return;
+    }
+    
+    document.getElementById('username').textContent = user.username || 'User';
+    document.getElementById('profile-pic').src = user.profile_picture || '/static/images/default-avatar.png';
+    
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+        currentTheme = 'light';
+    }
+    
+    loadMovies();
+    loadSeries();
 });
 
+// Modal Helpers
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { 
+    document.getElementById(id).style.display = 'none'; 
+    if (id === 'video-modal') {
+        const player = document.getElementById('main-player');
+        player.pause();
+        player.src = "";
+    }
+}
+
+// Data Loading
 async function loadMovies() {
-  try {
-    const data = await getMovies(1);
-    const container = document.getElementById('latest-movies');
-    container.innerHTML = data.movies.map(m => `
-      <div class='carousel-item' onmouseover='showTrailer(this, "${m.trailer_url}")'>
-        <img src='${m.thumbnail_url || "/static/images/placeholder.png"}' alt='${m.title}'>
-        <div class='play-overlay'>▶</div>
-        <div class='video-info'>
-          <div class='video-title'>${m.title}</div>
-          <div class='video-controls'>
-            <button class='btn btn-small btn-primary' onclick='showPaymentModal(${m.id}, null, "${m.title}", ${m.price})'>Stream • Ksh ${m.price}</button>
-            <button class='btn btn-small btn-secondary' onclick='showPaymentModal(${m.id}, null, "${m.title}", ${m.price}, true)'>Download</button>
-          </div>
-          <div class='countdown'>7 Days Access</div>
-        </div>
-      </div>
-    `).join('');
-  } catch(err) { console.error(err); }
+    try {
+        const data = await getMovies(1);
+        const container = document.getElementById('latest-movies');
+        container.innerHTML = data.movies.map(m => renderMovieItem(m)).join('');
+    } catch(err) { console.error(err); }
 }
 
 async function loadSeries() {
-  try {
-    const data = await getSeries(1);
-    const container = document.getElementById('popular-series');
-    container.innerHTML = data.series.map(s => `
-      <div class='carousel-item'>
-        <img src='${s.thumbnail_url || "/static/images/placeholder.png"}' alt='${s.title}'>
-        <div class='play-overlay'>▶</div>
-        <div class='video-info'>
-          <div class='video-title'>${s.title}</div>
-          <div style='font-size:12px;'>${s.episodes_count} Episodes</div>
-          <div class='video-controls'>
-            <button class='btn btn-small btn-primary' onclick='showSeriesModal(${s.id})'>Select Episodes</button>
-          </div>
-          <div class='countdown'>Ksh ${s.price}/ep</div>
+    try {
+        const data = await getSeries(1);
+        const container = document.getElementById('popular-series');
+        container.innerHTML = data.series.map(s => renderSeriesItem(s)).join('');
+    } catch(err) { console.error(err); }
+}
+
+function renderMovieItem(m) {
+    return `
+        <div class="carousel-item" onclick="showMovieDetails(${m.id})">
+            <img src="${m.thumbnail_url || '/static/images/placeholder.png'}" alt="${m.title}">
+            <div class="play-overlay">▶</div>
+            <div class="video-info">
+                <div class="video-title">${m.title}</div>
+                <div class="countdown">Ksh ${m.price}</div>
+            </div>
         </div>
-      </div>
-    `).join('');
-  } catch(err) { console.error(err); }
+    `;
 }
 
-async function loadReviews() {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.id) return;
-    // Placeholder - would load reviews from API
-    document.getElementById('reviews-list').innerHTML = '<p style="color:#999;">No reviews yet. Be the first to share your thoughts!</p>';
-  } catch(err) { console.error(err); }
+function renderSeriesItem(s) {
+    return `
+        <div class="carousel-item" onclick="showSeriesDetails(${s.id})">
+            <img src="${s.thumbnail_url || '/static/images/placeholder.png'}" alt="${s.title}">
+            <div class="play-overlay">▶</div>
+            <div class="video-info">
+                <div class="video-title">${s.title}</div>
+                <div style="font-size:12px;">${s.episodes_count || 0} Episodes</div>
+            </div>
+        </div>
+    `;
 }
 
-function showPaymentModal(movieId, seriesId, title, amount, isDownload = false) {
-  const action = isDownload ? 'Download' : 'Stream';
-  const phone = prompt(`Enter M-Pesa phone number to ${action} "${title}" (Ksh ${amount}):`);
-  if (!phone) return;
-  
-  initiatePayment(movieId, seriesId, '', amount, phone).then(pay => {
-    alert(`Payment initiated.\nPhone: ${phone}\nAmount: Ksh ${amount}\n\nEnter M-Pesa PIN on your phone.\nTransaction ID will be verified automatically.`);
-    setTimeout(() => {
-      confirmPayment(pay.payment_id, 'TXN' + Date.now(), movieId, seriesId, '').then(() => {
-        alert('✓ Payment confirmed! Access granted for 7 days.');
-        loadMovies();
-      });
-    }, 3000);
-  });
+// Detail Views
+async function showMovieDetails(id) {
+    try {
+        const movie = await getMovie(id);
+        const body = document.getElementById('modal-body');
+        body.innerHTML = `
+            <div class="details-flex">
+                <img src="${movie.thumbnail_url || '/static/images/placeholder.png'}" class="details-img">
+                <div class="details-info">
+                    <h2>${movie.title}</h2>
+                    <div class="details-meta">
+                        <span>${movie.duration} mins</span>
+                        <span>${movie.category}</span>
+                        <span>⭐ ${movie.rating || 'N/A'}</span>
+                    </div>
+                    <p>${movie.description}</p>
+                    <div style="margin-top: 30px; display: flex; gap: 15px;">
+                        <button class="btn btn-primary" onclick="initiateFlow('movie', ${movie.id}, '${movie.title}', ${movie.price})">Stream now for Ksh ${movie.price}</button>
+                        <button class="btn btn-secondary" onclick="openVideoPlayer('${movie.trailer_url}')">Watch Trailer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        openModal('movie-modal');
+    } catch(err) { alert('Failed to load movie details'); }
 }
 
-function showSeriesModal(seriesId) {
-  getSeriesEpisodes(seriesId).then(eps => {
-    const checkboxes = eps.map((e, i) => `<label><input type='checkbox' value='${e.id}'> Episode ${e.episode_number}: ${e.title}</label>`).join('<br>');
-    const selected = prompt(`Select episodes to purchase:\n\n${checkboxes}\n\n(Check boxes and submit)`);
-    if (selected) alert('Proceed with series purchase. Implementation continues in production.');
-  });
+// Payment Flow
+function initiateFlow(type, id, title, amount) {
+    currentPaymentData = { type, id, title, amount };
+    document.getElementById('payment-target').textContent = title;
+    document.getElementById('payment-amount').textContent = `Ksh ${amount}`;
+    document.getElementById('payment-status').style.display = 'none';
+    closeModal('movie-modal');
+    openModal('payment-modal');
 }
 
-function searchContent() {
-  const query = document.getElementById('search-input').value.toLowerCase();
-  // Implement search filtering - would call API with search query
-  if (query.length < 2) { loadMovies(); return; }
-  alert('Search for: ' + query);
+async function processPayment() {
+    const phone = document.getElementById('phone-number').value;
+    const statusDiv = document.getElementById('payment-status');
+    
+    if (!phone) {
+        showStatus('Enter phone number', 'error');
+        return;
+    }
+
+    try {
+        showStatus('Initiating M-Pesa push...', 'success');
+        const res = await initiatePayment(
+            currentPaymentData.type === 'movie' ? currentPaymentData.id : null,
+            currentPaymentData.type === 'series' ? currentPaymentData.id : null,
+            '', 
+            currentPaymentData.amount, 
+            phone
+        );
+
+        showStatus('Please enter PIN on your phone...', 'success');
+        
+        // Start polling for status
+        let attempts = 0;
+        const interval = setInterval(async () => {
+            attempts++;
+            const statusRes = await apiFetch(`/payments/query/${res.payment_id}`);
+            if (statusRes.status === 'completed') {
+                clearInterval(interval);
+                showStatus('✓ Payment Successful!', 'success');
+                setTimeout(() => {
+                    closeModal('payment-modal');
+                    // In a real app, unlock content here
+                    alert('Content unlocked! You can now stream.');
+                }, 2000);
+            } else if (statusRes.status === 'failed' || attempts > 20) {
+                clearInterval(interval);
+                showStatus('Payment failed or timed out', 'error');
+            }
+        }, 3000);
+
+    } catch(err) {
+        showStatus('Error: ' + err.message, 'error');
+    }
 }
 
-function submitReview() {
-  const text = document.getElementById('review-text').value;
-  if (!text) { alert('Enter a review'); return; }
-  alert('Thank you for your review: "' + text.substring(0, 50) + '..."');
-  document.getElementById('review-text').value = '';
+function showStatus(msg, type) {
+    const statusDiv = document.getElementById('payment-status');
+    statusDiv.textContent = msg;
+    statusDiv.style.display = 'block';
+    statusDiv.className = `status-msg status-${type}`;
 }
 
+// Video Player
+function openVideoPlayer(url) {
+    if (!url) {
+        alert('No video URL available');
+        return;
+    }
+    const player = document.getElementById('main-player');
+    player.src = url;
+    openModal('video-modal');
+}
+
+// General UI
 function toggleTheme() {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('theme', currentTheme);
-  if (currentTheme === 'light') {
-    document.body.style.filter = 'invert(1) hue-rotate(180deg)';
-  } else {
-    document.body.style.filter = 'none';
-  }
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', currentTheme);
+    document.body.style.filter = currentTheme === 'light' ? 'invert(1) hue-rotate(180deg)' : 'none';
 }
 
-function loadSection(section) {
-  alert(`Loading ${section} section...`);
-  // In production, would dynamically load different content sections
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/frontend/user/login.html';
+}
+
+async function loadSection(section) {
+    const area = document.getElementById('content-area');
+    area.innerHTML = `<h2>${section.charAt(0).toUpperCase() + section.slice(1)}</h2><p>Loading ${section} content...</p>`;
+    
+    if (section === 'home') {
+        window.location.reload(); // Simple way to reset
+    } else if (section === 'movies') {
+        const data = await getMovies(1);
+        area.innerHTML = `
+            <div class="section-title">All Movies</div>
+            <div class="grid">${data.movies.map(m => renderMovieItem(m)).join('')}</div>
+        `;
+    }
+    // Add other sections as needed
 }

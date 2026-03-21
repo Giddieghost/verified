@@ -10,6 +10,8 @@ from backend.utils.auth import token_required
 payment_bp = Blueprint('payment', __name__)
 
 
+from backend.services.daraja_service import DarajaService
+
 @payment_bp.route('/initiate', methods=['POST'])
 @token_required
 def initiate_payment():
@@ -17,9 +19,17 @@ def initiate_payment():
     
     movie_id = data.get('movie_id')
     series_id = data.get('series_id')
-    episode_ids = data.get('episode_ids', '')  # comma-separated for series
-    amount = float(data.get('amount', 10.0))
+    amount = float(data.get('amount', 49.0))
     phone = data.get('phone_number')
+
+    if not phone:
+        return jsonify({'error': 'phone number required'}), 400
+
+    # Format phone to 254...
+    if phone.startswith('0'):
+        phone = '254' + phone[1:]
+    elif phone.startswith('+'):
+        phone = phone[1:]
 
     payment = Payment(
         user_id=g.current_user.id,
@@ -28,20 +38,55 @@ def initiate_payment():
         method='mpesa',
         phone_number=phone,
         status='pending',
-        description=f"Payment for movie_id={movie_id}, series_id={series_id}"
+        description=f"Get Movies: {'Movie '+str(movie_id) if movie_id else 'Series '+str(series_id)}"
     )
 
     db.session.add(payment)
     db.session.commit()
 
-    # Placeholder for M-Pesa STK Push
-    # In production, call M-Pesa API
-    return jsonify({
-        'payment_id': payment.id,
-        'status': 'initiated',
-        'amount': amount,
-        'phone': phone
-    }), 201
+    # Call Daraja STK Push
+    res, status_code = DarajaService.initiate_stk_push(
+        phone_number=phone,
+        amount=1, # Setting to 1 KES for testing per Daraja sandbox rules if needed, or stick to amount
+        account_reference=f"PAY-{payment.id}",
+        transaction_desc="Payment for Get Movies Content"
+    )
+
+    if status_code == 200:
+        payment.checkout_request_id = res.get('CheckoutRequestID')
+        db.session.commit()
+        return jsonify({
+            'payment_id': payment.id,
+            'checkout_request_id': payment.checkout_request_id,
+            'status': 'initiated',
+            'message': 'Check your phone for STK push'
+        }), 201
+    
+    return jsonify({'error': 'M-Pesa push failed', 'details': res}), status_code
+
+
+@payment_bp.route('/query/<int:payment_id>', methods=['GET'])
+@token_required
+def query_payment_status(payment_id):
+    payment = Payment.query.get(payment_id)
+    if not payment or payment.user_id != g.current_user.id:
+        return jsonify({'error': 'payment not found'}), 404
+    
+    if not payment.checkout_request_id:
+        return jsonify({'status': payment.status}), 200
+
+    res, status_code = DarajaService.query_stk_status(payment.checkout_request_id)
+    if status_code == 200:
+        result_code = res.get('ResultCode')
+        if result_code == '0':
+            payment.status = 'completed'
+            db.session.commit()
+            # Note: Purchase normally handled in callback, but for UX we can check here
+        elif result_code:
+            payment.status = 'failed'
+            db.session.commit()
+        
+    return jsonify({'status': payment.status, 'details': res}), 200
 
 
 @payment_bp.route('/<int:payment_id>/confirm', methods=['POST'])
@@ -56,7 +101,7 @@ def confirm_payment(payment_id):
     data = request.get_json() or {}
     transaction_id = data.get('transaction_id')
     
-    # Placeholder for M-Pesa verification
+    # In a real app, this would be verified via M-Pesa Callback
     payment.status = 'completed'
     payment.transaction_id = transaction_id
     db.session.commit()

@@ -7,27 +7,24 @@ from backend.utils.auth import token_required, admin_required
 movie_bp = Blueprint('movie', __name__)
 
 
+from backend.services.movie_service import MovieService
+
 @movie_bp.route('/', methods=['GET'])
 def get_movies():
     category = request.args.get('category', '')
     page = request.args.get('page', 1, type=int)
-    per_page = 12
-
-    query = Movie.query
-    if category:
-        query = query.filter_by(category=category)
-
-    movies = query.paginate(page=page, per_page=per_page)
+    
+    movies_pagination = MovieService.get_movies(category=category, page=page)
     return jsonify({
-        'movies': [m.to_dict() for m in movies.items],
-        'total': movies.total,
-        'pages': movies.pages
+        'movies': [m.to_dict() for m in movies_pagination.items],
+        'total': movies_pagination.total,
+        'pages': movies_pagination.pages
     }), 200
 
 
 @movie_bp.route('/<int:movie_id>', methods=['GET'])
 def get_movie(movie_id):
-    movie = Movie.query.get(movie_id)
+    movie = MovieService.get_movie_by_id(movie_id)
     if not movie:
         return jsonify({'error': 'movie not found'}), 404
     return jsonify(movie.to_dict()), 200
@@ -37,21 +34,7 @@ def get_movie(movie_id):
 @admin_required
 def create_movie():
     data = request.get_json() or {}
-    
-    movie = Movie(
-        title=data.get('title'),
-        description=data.get('description'),
-        category=data.get('category'),
-        price=float(data.get('price', 10.0)),
-        duration=int(data.get('duration', 0)),
-        thumbnail_url=data.get('thumbnail_url'),
-        trailer_url=data.get('trailer_url'),
-        video_url=data.get('video_url'),
-        upload_by_admin_id=g.current_user.id
-    )
-    
-    db.session.add(movie)
-    db.session.commit()
+    movie = MovieService.create_movie(data, g.current_user.id)
     return jsonify(movie.to_dict()), 201
 
 

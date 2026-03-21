@@ -6,6 +6,13 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///../database/app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Daraja M-Pesa
+    MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
+    MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
+    MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
+    MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '174379')
+    MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL')
 
 class DevelopmentConfig(Config):
     DEBUG = True

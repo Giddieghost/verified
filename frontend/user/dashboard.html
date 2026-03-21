@@ -67,13 +67,51 @@
             <textarea id="review-text" placeholder="Share your thoughts about Get Movies..."></textarea>
             <button class="btn btn-primary" onclick="submitReview()">Post Review</button>
           </div>
-          <div class="review-list" id="reviews-list">
+          <div id="reviews-list" class="review-list">
             <p style="color: #999; text-align: center; padding: 20px;">No reviews yet. Be the first!</p>
           </div>
         </div>
       </section>
     </div>
   </main>
+
+  <!-- Modals -->
+  <div id="movie-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('movie-modal')">&times;</span>
+      <div id="modal-body">
+        <!-- Content injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div id="video-modal" class="modal">
+    <div class="modal-content video-modal-content">
+      <span class="close" onclick="closeModal('video-modal')">&times;</span>
+      <div class="video-container">
+        <video id="main-player" controls autoplay>
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <div id="payment-modal" class="modal">
+    <div class="modal-content payment-content">
+      <span class="close" onclick="closeModal('payment-modal')">&times;</span>
+      <h3>💳 M-Pesa Payment</h3>
+      <div class="payment-details">
+        <p id="payment-target">Item Name</p>
+        <p id="payment-amount" class="price">Ksh 49.0</p>
+      </div>
+      <div class="form-group">
+        <label>M-Pesa Phone Number</label>
+        <input type="text" id="phone-number" placeholder="254712345678">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="processPayment()">Pay Now</button>
+      <div id="payment-status" class="status-msg"></div>
+    </div>
+  </div>
 
   <footer>
     <div class="logo" style="color: #e50914; margin-bottom: 15px;"><span>Get</span> Movies</div>

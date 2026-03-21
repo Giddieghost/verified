@@ -1,6 +1,9 @@
 from flask import Flask
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 from .database.db import db
+from flask_migrate import Migrate
+
+migrate = Migrate()
 from .routes.auth_routes import auth_bp
 from .routes.user_routes import user_bp
 from .routes.admin_routes import admin_bp
@@ -25,6 +28,7 @@ def create_app(config_name=None):
         app.config.from_object(DevelopmentConfig)
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
