@@ -1,4 +1,9 @@
 from flask import Flask
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 from backend.config import DevelopmentConfig, ProductionConfig, TestingConfig
 from backend.database.db import db
 from flask_migrate import Migrate
